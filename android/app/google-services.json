@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "298984251944",
+    "project_id": "etracs-ocr",
+    "storage_bucket": "etracs-ocr.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:298984251944:android:a681cc87eb496dab3f8b1d",
+        "android_client_info": {
+          "package_name": "com.anonymous.ticketingsystem"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpiZbElhFRMH9pIVO8m2AmuKg0rm2JQJw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
