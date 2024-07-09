@@ -12,10 +12,23 @@ export const setupDatabase = async () => {
         PRAGMA journal_mode = WAL;
         CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, password TEXT, ticketsIssued INTEGER DEFAULT 0);
         CREATE TABLE IF NOT EXISTS session (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, token TEXT, FOREIGN KEY(userId) REFERENCES users(id));
-        CREATE TABLE IF NOT EXISTS violators (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, fullName TEXT, contactNum TEXT, email TEXT, address TEXT, violations TEXT, signature TEXT, FOREIGN KEY(userId) REFERENCES users(id));
+        CREATE TABLE IF NOT EXISTS violators (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, firstName TEXT, middleName TEXT, lastName TEXT, contactNum TEXT, email TEXT, address TEXT, violations TEXT, signature TEXT, FOREIGN KEY(userId) REFERENCES users(id));
       `
     );
-      // INSERT INTO users (email, password) VALUES ('admin', '123');
+    // INSERT INTO users (email, password) VALUES ('admin', '123');
+    // DELETE FROM violators where (id = '13');
+
+    // INSERT INTO violators (firstName, middleName, lastName, contactNum, address, violations, signature ) 
+    // VALUES (
+    //   'Arris Ian', 
+    //   'Durana', 
+    //   'Peralta', 
+    //   '09667954151', 
+    //   'Cebu City, Cebu', 
+    //   'testViolation', 
+    //   'testSignature' 
+    // );
+
     // await db.execAsync(
     //   `DELETE from users where (email = "peraltaarris07@gmail.com");`
     // );
@@ -129,7 +142,7 @@ export const getSession = async (callback) => {
     }
 
     const result = await db.getAllAsync(
-      'SELECT users.id, users.email, session.token FROM session JOIN users ON session.userId = users.id LIMIT 1'
+      'SELECT users.id, users.email, session.token FROM session JOIN users ON session.userId = users.id LIMIT 1;' // check code again for error ";"
     );
 
     if (result.length > 0) {
@@ -201,10 +214,13 @@ export const displayTickets = async () => {
   }
 }
 
-export const checkViolatorExists = async (name) => {
+export const checkViolatorExists = async (firstName, middleName, lastName) => {
   const db = await setupDatabase();
-  const result = await db.getAllAsync('SELECT * FROM violators where fullName = ?', name);
-  const exists = result.length > 0
+  const query = 'SELECT * FROM violators WHERE firstName LIKE ? ORDER BY firstName ASC';
+  const patternFirstName = `%${firstName}%`;
+  const patternMiddleName = `%${middleName}%`;
+  const patternLastName = `%${lastName}%`;
+  const result = await db.getAllAsync(query, [patternFirstName, patternMiddleName, patternLastName]);
   
-  return exists;
+  return result;
 }

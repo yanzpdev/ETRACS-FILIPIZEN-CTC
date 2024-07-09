@@ -11,6 +11,7 @@ import ThermalPrinterModule from 'react-native-thermal-printer';
 import { Violations } from '@/app/interfaces';
 import { getSession, saveTicketRecord } from '@/utils/database';
 import CameraScreen from '../../main/CameraScreen';
+import { ScrollView } from 'react-native-gesture-handler';
 // import CameraScreen from '../../main/CameraScreen';
 
 export default function PersonScreen() {
@@ -18,7 +19,9 @@ export default function PersonScreen() {
   const [user, setUser] = useState<any>();
   const [scanScreen, setScanScreen] = useState<boolean>(false);
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    middleName: '',
+    lastName: '',
     contactNum: '',
     email: '',
     address: '',
@@ -29,22 +32,21 @@ export default function PersonScreen() {
   const goToNext = () => setCurrentStep((prevStep) => prevStep + 1);
   const goToPrevious = () => setCurrentStep((prevStep) => prevStep - 1);
 
-  useEffect(() => {
-    const checkSession = async () => {
-      await getSession((user: any) => {
-        if (user) {
-          setUser(user);    
-        }
+  // useEffect(() => {
+  //   const checkSession = async () => {
+  //     await getSession((user: any) => {
+  //       if (user) {
+  //         setUser(user);    
+  //       }
         
-        else {
-          console.error("no user data");
-        }
-      });
-    };
+  //       else {
+  //         console.error("no user data");
+  //       }
+  //     });
+  //   };
 
-    checkSession();
-  }, []);
-
+  //   checkSession();
+  // }, []);
 
   const date = new Date();
   let day = date.getDate();
@@ -126,7 +128,7 @@ export default function PersonScreen() {
     } 
     
     catch (err: any) {
-      console.log(err.message);
+      console.log(err.message); 
     }
   };
 

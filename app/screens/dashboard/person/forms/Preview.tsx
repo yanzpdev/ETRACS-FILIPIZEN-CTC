@@ -54,7 +54,7 @@ const Preview:React.FC<PreviewProps> = ({formData, handleSubmit, goToPrevious, s
         >
           <View className='flex-row items-center justify-between'>
             <Text className='font-semibold'>Name:</Text>
-            <Text className='font-semibold'>{formData.fullName}</Text>
+            <Text className='font-semibold'>{formData.firstName} {formData.middleName} {formData.lastName}</Text>
           </View>
           <View className='flex-row items-center justify-between'>
             <Text className='font-semibold'>Contact Number:</Text>

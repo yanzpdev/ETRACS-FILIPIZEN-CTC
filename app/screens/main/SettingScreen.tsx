@@ -4,21 +4,21 @@ import { getSession, clearSession } from '@/utils/database';
 import { router } from 'expo-router';
 import Header from '@/components/Header';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SettingScreen() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
     const checkSession = async () => {
-      await getSession((user: any) => {
-        if (user) {
+      const session = await AsyncStorage.getItem('readerInfo');
+        if (session) {
           setUser(user);
         } 
         
         else {
           router.replace('login');
         }
-      });
     };
 
     const exitApp = () => {
@@ -53,7 +53,7 @@ export default function SettingScreen() {
 
     const handleSignOut = async () => {
       try {
-        await clearSession();
+        await AsyncStorage.setItem('readerInfo', JSON.stringify(null));
         router.replace('login'); 
       } 
       
@@ -83,9 +83,9 @@ export default function SettingScreen() {
 
   // console.log('Dashboard - Setting: ', user);
 
-  if (!user) {
-    return <Text>Loading...</Text>; 
-  }
+  // if (!user) {
+  //   return <Text>Loading...</Text>; 
+  // }
 
   const settingItems = [
     {id: 1, action: () => {}, title: 'Setting 1', icon: <MaterialCommunityIcons name="cog-outline" size={32} color="black" />},

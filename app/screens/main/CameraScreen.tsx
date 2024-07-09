@@ -8,7 +8,6 @@ import { crop, CropRegion } from 'vision-camera-cropper';
 import { FormData } from '@/app/interfaces';
 import MlKitOcr from 'react-native-mlkit-ocr';
 import * as FileSystem from 'expo-file-system';
-import { parse } from 'mrz'
 
 interface CameraScreenProps {
   scanID: () => void;
@@ -26,7 +25,6 @@ const CameraScreen:React.FC<CameraScreenProps> = ({scanID, setFormData, formData
   const device = useCameraDevice("back");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);  
   const [imageUri, setImageUri] = useState<string>();
-  
   const format = useCameraFormat(device, [
     { videoResolution: { height: 1920, width: 1080 } },
     { fps: 30 }
@@ -142,7 +140,7 @@ const CameraScreen:React.FC<CameraScreenProps> = ({scanID, setFormData, formData
 
   const btnPressed = () => {
     scanID();
-    setFormData({ ...formData, fullName: "Arris Ian Peralta" });
+    setFormData({ ...formData, firstName: "Arris Ian Peralta" });
   } 
 
   return (

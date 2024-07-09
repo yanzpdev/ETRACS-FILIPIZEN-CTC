@@ -4,21 +4,21 @@ import { getSession, clearSession } from '@/utils/database';
 import { Link, router } from 'expo-router';
 import Header from '@/components/Header';
 import { Entypo, FontAwesome5, Ionicons, AntDesign } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
     const checkSession = async () => {
-      await getSession((user: any) => {
-        if (user) {
+      const session = await AsyncStorage.getItem('readerInfo');
+        if (session) {
           setUser(user);
-        }
+        } 
         
         else {
           router.replace('login');
         }
-      });
     };
 
     const exitApp = () => {
@@ -52,9 +52,9 @@ export default function HomeScreen() {
   }, []);
 
 
-  if (!user) {
-    return <Text>Loading...</Text>; 
-  }
+  // if (!user) {
+  //   return <Text>Loading...</Text>; 
+  // }
 
   const menuItems = [
     {id: 1, link: 'dashboard/person', title: 'Person', icon: <FontAwesome5 name="user" size={40} color="black" />},

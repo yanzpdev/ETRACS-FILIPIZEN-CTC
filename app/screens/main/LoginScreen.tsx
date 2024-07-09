@@ -1,136 +1,116 @@
 import { StyleSheet, Text, View, Image, TextInput, Pressable, Alert, Keyboard } from 'react-native';
 import Checkbox from 'expo-checkbox';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '@/global.css';
-import * as SplashScreen from 'expo-splash-screen';
-import { createStackNavigator } from '@react-navigation/stack';
-import { useFonts } from 'expo-font';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; 
 import { useKeepAwake } from 'expo-keep-awake';
-import { getSession, setupDatabase, validateLogin } from '@/utils/database.js';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import CryptoJS from 'crypto-js';
 
-type CallbackTypes = boolean | 'wrongPassword' | 'doesNotExist' | 'emptyPassword';
-
-const Stack = createStackNavigator();
+const etracsIP = '192.168.2.11';
+const etracsPort = '8070';
 
 const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState(''); 
+  const [username, setUsername] = useState(''); 
   const [password, setPassword] = useState(''); 
   const [loading, setLoading] = useState(false);
   const [isChecked, setChecked] = useState(false);
-  const [user, setUser] = useState<any>();
-
-  // this causes Error: Rendered more hooks than during the previous render.
-  useEffect(() => {
-    setupDatabase();
-
-    // const checkSession = async () => {
-    //   await getSession((user: any) => {
-    //     if (user) {
-    //       setUser(user);    
-    //       console.log(user);
-    //     }
-        
-    //     else {
-    //       console.error("no user data");
-    //     }
-    //   });
-    // };
-
-    // checkSession();
-  }, []);
 
   const toggleShowPassword = () => { 
     setShowPassword(!showPassword); 
   }; 
 
-  // const [fontsLoaded, fontError] = useFonts({
-  //   'Ubuntu': require('@/assets/fonts/Ubuntu-Regular.ttf'),
-  // });
+  function generateHmacMD5(seed: string, v: string) {
+    const hmac = CryptoJS.HmacMD5(v, seed);
+    return hmac.toString();
+  }
+  
+  const handleLogin = async () => {
+    Keyboard.dismiss();
+    if (!username && !password) {  
+      Alert.alert('Login failed', 'Please provide username and password');
+      setUsername('');
+      setPassword('');
+      return;
+    }
 
-  // const onLayoutRootView = useCallback(async () => {
-  //   if (fontsLoaded || fontError) {
-  //     await SplashScreen.hideAsync();
-  //   }
-  // }, [fontsLoaded, fontError]);
+    else if (!username && password) {
+      Alert.alert('Login failed', 'Username cannot be blank.');
+      setUsername('');
+      setPassword('');
+      return;
+    }
 
-  // if (!fontsLoaded && !fontError) {
-  //   return null;
-  // }
+    else if (username && !password) {
+      Alert.alert('Login failed', 'Password cannot be blank.');
+      setUsername('');
+      setPassword('');
+      return;
+    }
 
-  const handleSignIn = async () => {
-    validateLogin(email, password, (callback: CallbackTypes) => {
-      Keyboard.dismiss();
-      console.log(callback);
-      if (callback === true) {
-        // Alert.alert('Login success', 'You are now logged in.');
-        setLoading(true);
-        // Verify the session
-        getSession((user: any) => {
-          if (user) {
-            setTimeout(() => {
-              router.replace('dashboard');
-            }, 2000);
-          } 
-          
-          else {
-            setLoading(false);
-            Alert.alert('Login failed', 'Unable to create session.');
-          }
-        });
+    setLoading(true);
+    const lowercasedUsername = username.toLowerCase().toString()
+    const hash = await generateHmacMD5(lowercasedUsername, password);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 30000);
+  
+    try {
+      const res = await fetch(`http://${etracsIP}:${etracsPort}/osiris3/json/etracs25/LoginService.login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          env: {
+            CLIENTTYPE: 'mobile',
+          },
+          args: {
+            username: username,
+            password: hash,
+          },
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+  
+      if (!res.ok) {
+        Alert.alert('Login failed', 'Please check your internet connection and try again.');
+        setUsername('');
+        setPassword('');
+        return;
+      }
+  
+      const data = await res.json();
+  
+      if (data.status === 'ERROR') {
+        Alert.alert('Login failed', 'Wrong username and/or password.');
+        setUsername('');
+        setPassword('');
+        return;
       } 
-  
-      else if(callback === 'wrongPassword') {
-        setLoading(true);
-        setTimeout(() => {
-          Alert.alert(
-            'Login failed', 
-            'Invalid password.',
-          );
-          setLoading(false);
-        }, 2000)
-      }
-  
-      else if(callback === 'doesNotExist') {
-        setLoading(true);
-        setTimeout(() => {
-          Alert.alert(
-            'Login failed', 
-            'Account does not exist.',
-          );
-          setLoading(false);
-        }, 2000)
-      }
       
-      else if(callback === 'emptyPassword') {
-        setLoading(true);
-        setTimeout(() => {
-          Alert.alert(
-            'Login failed', 
-            'Please provide your password.',
-          );
-          setLoading(false);
-        }, 2000)
-      }
-  
-      else {
-        setTimeout(() => {
-          setLoading(true);
-          Alert.alert(
-            'Login failed', 
-            'An error occurred while signing in.',
-          );
-          setLoading(false);
-        }, 2000)
-      }
-    });
+      delete data.env.ROLES;
+      await AsyncStorage.setItem('readerInfo', JSON.stringify(data));
+      // console.log("Successfully saved user info to AsyncStorage");  
+      const info = await AsyncStorage.getItem('readerInfo');
+      console.log(info);
+      router.replace('dashboard');
+    } 
+    
+    catch (error) {
+      Alert.alert('Login failed', 'A problem ocurred, please try again.');
+      setUsername('');
+      setPassword('');
+    } 
+    
+    finally {
+      setLoading(false);
+    }
   };
   
-
   useKeepAwake();
-  // {/*  onLayout={onLayoutRootView} */} put this on Top most parent View container {/*  onLayout={onLayoutRootView} */}
   return (
     <View className='h-screen w-screen flex flex-1 items-center justify-center'> 
       <View className='h-fit w-fit bg-transparent relative' style={styles.padding}>
@@ -142,8 +122,8 @@ const LoginScreen = () => {
           className='w-max pb-3 pt-8 px-7 bg-[#E9EDEE] rounded-full text-[#636363] text-lg font-semibold'
           keyboardType="email-address"
           autoCapitalize='none'
-          onChangeText={setEmail}
-          value={email}
+          onChangeText={setUsername}
+          value={username}
         />
         <View className='text-[#AEABAB] px-7 top-9 z-10 w-full flex flex-row justify-between items-center'>
           <Text className='text-[#AEABAB] text-lg font-semibold'>Password</Text>
@@ -167,7 +147,7 @@ const LoginScreen = () => {
           <Pressable
             className={`${loading ? 'bg-[#3892c3]' : 'bg-[#00669D]'} duration-300 py-5 rounded-full flex items-center justify-center`}
             android_ripple={{color: '#007DC1', borderless: true}}
-            onPress={handleSignIn}
+            onPress={handleLogin}
           >
             {loading === true ?
               <Image source={require('@/assets/images/loginloading.gif')} style={{width: 24, height: 24}}/>

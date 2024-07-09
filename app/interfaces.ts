@@ -7,27 +7,13 @@ export type Violations = {
 }
  
 export interface FormData {
-  fullName: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
   contactNum: string;
   email: string;
   address: string;
   violations: Violations[];
   signature: string;
   printed: boolean;
-}
-
-export interface ParsedResult {
-  surname: string;
-  givenName: string;
-  contactNum: string;
-  address: string;
-  IDNum: string;
-  birthDate: string;
-  expiryDate: string;
-}
-
-export interface ScannedIDCard {
-  image: string;
-  info: ParsedResult;
-  timestamp: number;
 }
